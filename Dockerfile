@@ -72,6 +72,7 @@ RUN apt-get update; \
 		g++ \
 		gawk \
 		git-lfs \
+		gnupg \
 		iproute2 \
 		iputils-ping \
 		less \
@@ -143,16 +144,16 @@ ENV FIO_CHECK_CMD /usr/bin/fiocheck
 # Install skopeo
 COPY --from=container-tools /skopeo/bin/skopeo /usr/bin
 
-# Install docker CLI, v20.10.14, required by the oe-builtin App preload
+# Install docker CLI, required by the oe-builtin App preload
 RUN mkdir -p /etc/apt/keyrings \
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg; \
 	echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null; \
 	apt-get update; \
-	apt-get install -y docker-ce-cli=5:20.10.14~3-0~ubuntu-focal; \
+	apt-get install -y \
+		containerd.io \
+		docker-buildx-plugin \
+		docker-ce-cli \
+		docker-compose-plugin \
+	; \
 	apt-get clean; \
 	rm -rf /var/lib/apt/lists/*
-
-# Install docker compose CLI plugin, v2.6.0, required by the oe-builtin App preload, `docker compose config`
-RUN mkdir -p /usr/lib/docker/cli-plugins; \
-	wget https://github.com/docker/compose/releases/download/v2.6.0/docker-compose-linux-x86_64 -O /usr/lib/docker/cli-plugins/docker-compose; \
-	chmod +x /usr/lib/docker/cli-plugins/docker-compose
