@@ -2,7 +2,8 @@
 FROM ubuntu:20.04 AS container-tools
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update; \
+RUN add-apt-repository ppa:git-core/ppa -y; \
+	apt-get update; \
 	apt-get install -y \
 		git \
 		libassuan-dev \
@@ -24,8 +25,9 @@ RUN git clone https://github.com/containers/skopeo.git /skopeo && \
 
 # Build ostreeuploader, aka fiopush/fiocheck
 FROM ubuntu:20.04 AS fiotools
-RUN apt-get update
-RUN apt-get install -y wget git gcc make
+RUN add-apt-repository ppa:git-core/ppa -y; \
+	apt-get update; \
+	apt-get install -y wget git gcc make
 RUN wget -P /tmp https://go.dev/dl/go1.21.0.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf /tmp/go1.21.0.linux-amd64.tar.gz
 ENV PATH /usr/local/go/bin:$PATH
@@ -48,7 +50,8 @@ ARG DEV_USER=builder
 ARG DEV_USER_PASSWD=builder
 
 # FIO PPA for additional dependencies and newer packages
-RUN apt-get update; \
+RUN add-apt-repository ppa:git-core/ppa -y; \
+	apt-get update; \
 	apt-get install -y --no-install-recommends software-properties-common; \
 	add-apt-repository ppa:fio-maintainers/ppa; \
 	apt-get clean; \
