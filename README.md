@@ -1,8 +1,6 @@
-Arduino Linux microPlatform Manifest
-============================
+# Arduino Linux microPlatform Manifest
 
-Instructions for local builds (Arduino)
----------------------------------------
+## Instructions for local builds (Arduino)
 
 Supported **MACHINE** targets (tested by Arduino):
 
@@ -11,18 +9,43 @@ Supported **MACHINE** targets (tested by Arduino):
 * portenta-x8-preempt-rt (Preempt-rt patch targets) !!_**work in progress**_!!
 
 ```
-repo init -u https://github.com/arduino/lmp-manifest.git -m arduino.xml -b release
-repo sync
+repo init -u https://github.com/MATOT9/lmp-manifest.git -m arduino.xml -b release
+repo sync -j 10
+```
 
+### Setup and Build Image
+
+```
 DISTRO=lmp-xwayland MACHINE=portenta-x8 . setup-environment
-echo "ACCEPT_FSL_EULA = \"1\"" >> conf/local.conf
-bitbake lmp-devel-arduino-image
+```
+Some packages are added for increase versatility with the option
+```
+IMAGE_INSTALL += "c-ares ca-certificates curl dpkg gnutls iptables iproute2 krb5 libidn libssh2 mbedtls nano nghttp2 openldap openssh openssl p7zip perl unzip wolfssl xz zlib zstd"
+```
 
+Performance configuration can be made with the following options of conf/local.conf
+```
+BB_NUMBER_THREADS = "20"
+BB_NUMBER_PARSE_THREADS ?= "${@oe.utils.cpu_count()}"
+PARALLEL_MAKE = "-j 20"
+do_fetch[number_threads] = "3"
+```
+Launch the build with:
+```
+bitbake lmp-devel-arduino-image
+```
+
+### Setup and Build Manufacturing Tools
+
+```
+cd ..
 DISTRO=lmp-mfgtool MACHINE=portenta-x8 . setup-environment
 echo "ACCEPT_FSL_EULA = \"1\"" >> conf/local.conf
 echo "MFGTOOL_FLASH_IMAGE = \"lmp-devel-arduino-image\"" >> conf/local.conf
 bitbake mfgtool-files
 ```
+
+### Build with no Wayland Support
 
 alternatively you can build a devel image that for now doesn't have wayland support.
 This is currently our way to go for debugging kernel related issues and uses DISTRO lmp-base
