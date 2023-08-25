@@ -25,15 +25,17 @@ RUN git clone https://github.com/containers/skopeo.git /skopeo && \
 
 # Build ostreeuploader, aka fiopush/fiocheck
 FROM ubuntu:20.04 AS fiotools
+COPY --from=container-tools /tmp/go1.21.0.linux-amd64.tar.gz /tmp
 RUN add-apt-repository ppa:git-core/ppa -y; \
 	apt-get update; \
-	apt-get install -y wget git gcc make
-RUN wget -P /tmp https://go.dev/dl/go1.21.0.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf /tmp/go1.21.0.linux-amd64.tar.gz
+	apt-get install -y wget git gcc make; \
+	tar -C /usr/local -xzf /tmp/go1.21.0.linux-amd64.tar.gz; \
+	rm /tmp/go1.21.0.linux-amd64.tar.gz
 ENV PATH /usr/local/go/bin:$PATH
 
-RUN git clone https://github.com/foundriesio/ostreeuploader.git /ostreeuploader && \
-    cd /ostreeuploader && git checkout -q 2022.4 && \
+RUN git clone https://github.com/foundriesio/ostreeuploader.git /ostreeuploader; \
+    cd /ostreeuploader; \
+	git checkout -q 2022.4; \
     cd /ostreeuploader && make
 
 
@@ -50,14 +52,14 @@ ARG DEV_USER=builder
 ARG DEV_USER_PASSWD=builder
 
 # FIO PPA for additional dependencies and newer packages
-RUN add-apt-repository ppa:git-core/ppa -y; \
-	apt-get update; \
+RUN apt-get update; \
 	apt-get install -y --no-install-recommends software-properties-common; \
 	add-apt-repository ppa:fio-maintainers/ppa; \
 	apt-get clean; \
 	rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update; \
+RUN add-apt-repository ppa:git-core/ppa -y; \
+	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		android-sdk-ext4-utils \
 		android-sdk-libsparse-utils \
@@ -137,6 +139,8 @@ RUN echo $DEV_USER:$DEV_USER_PASSWD | chpasswd
 
 # Initialize development environment for $DEV_USER.
 RUN sudo -u $DEV_USER -H git config --global credential.helper 'cache --timeout=3600'
+RUN sudo -u $DEV_USER -H git config --global user.email "you@example.com"; \
+	sudo -u $DEV_USER -H git config --global user.name "Your Name"
 
 # Install ostreeuploader, aka fiopush/fiocheck
 COPY --from=fiotools /ostreeuploader/bin/fiopush /usr/bin/
